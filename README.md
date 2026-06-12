@@ -23,6 +23,16 @@ cp .env.example .env.local
 npm run dev
 ```
 
+`npm run dev` starts the Vite frontend only. It is useful for form UI work, but it does not serve the Vercel `/api/*` functions used for checkout sessions or Stripe webhooks.
+
+For full local checkout/API testing, run the project through Vercel:
+
+```bash
+npx vercel dev
+```
+
+You can also test the complete API and Stripe webhook flow from a Vercel deployment.
+
 ## Google Sheets setup
 
 1. Create a Google Sheet for registrations.
@@ -64,6 +74,8 @@ npm run dev
 ## Vercel environment variables
 
 Copy the `.env.example` values into the Vercel project settings and replace each example value with the project-specific value. Keep secret keys server-side only; do not expose Stripe, Google, or Resend secrets through `VITE_` variables.
+
+The included `vercel.json` rewrites `/success` and `/cancel` to the React app so Stripe redirects load the client-rendered confirmation pages. `/api/*` routes are not rewritten and continue to resolve to Vercel functions.
 
 ## Sandbox verification
 
