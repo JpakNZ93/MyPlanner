@@ -88,7 +88,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
     paidAt: new Date().toISOString(),
   };
 
-  await sheetClient.appendPaidRegistration(paidRecord);
+  try {
+    await sheetClient.appendPaidRegistration(paidRecord);
+  } catch {
+    sendJson(response, 500, { error: "Paid registration could not be saved" });
+    return;
+  }
 
   try {
     await sendRegistrationEmail(env, paidRecord);

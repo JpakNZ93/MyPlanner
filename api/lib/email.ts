@@ -17,6 +17,7 @@ export async function sendRegistrationEmail(env: ServerEnv, record: PaidRegistra
     to: env.notificationEmail,
     subject: `Paid registration: ${primaryName}`,
     text: [
+      `Event: ${env.eventTitle}`,
       `Registration ID: ${record.registrationId}`,
       `Stripe session: ${record.stripeSessionId}`,
       `Payment amount: ${record.currency.toUpperCase()} ${(record.totalAmountCents / 100).toFixed(2)}`,

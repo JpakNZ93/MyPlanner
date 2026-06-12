@@ -27,13 +27,15 @@ interface AdditionalAttendeeForm {
   firstName: string;
   lastName: string;
   church: string;
+  mobile: string;
+  email: string;
   usesPrimaryContact: boolean;
 }
 
 type PrimaryAttendeeField = keyof PrimaryAttendeeForm;
 type AdditionalAttendeeField = keyof Pick<
   AdditionalAttendeeForm,
-  "firstName" | "lastName" | "church" | "usesPrimaryContact"
+  "firstName" | "lastName" | "church" | "mobile" | "email" | "usesPrimaryContact"
 >;
 
 const eventConfig: EventConfig = {
@@ -130,6 +132,8 @@ function RegistrationPage() {
         firstName: "",
         lastName: "",
         church: "",
+        mobile: "",
+        email: "",
         usesPrimaryContact: false,
       },
     ]);
@@ -336,6 +340,33 @@ function RegistrationPage() {
                         }
                       />
                     </label>
+                    {!attendee.usesPrimaryContact ? (
+                      <>
+                        <label>
+                          Additional attendee {attendeeNumber} mobile number
+                          <input
+                            autoComplete="tel"
+                            inputMode="tel"
+                            value={attendee.mobile}
+                            onChange={(event) =>
+                              updateAdditionalAttendee(attendee.id, "mobile", event.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          Additional attendee {attendeeNumber} email address
+                          <input
+                            autoComplete="email"
+                            inputMode="email"
+                            type="email"
+                            value={attendee.email}
+                            onChange={(event) =>
+                              updateAdditionalAttendee(attendee.id, "email", event.target.value)
+                            }
+                          />
+                        </label>
+                      </>
+                    ) : null}
                     <label className="checkbox-row full-width">
                       <input
                         checked={attendee.usesPrimaryContact}

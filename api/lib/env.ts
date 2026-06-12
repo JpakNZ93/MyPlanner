@@ -10,6 +10,7 @@ export interface ServerEnv {
   resendApiKey: string;
   notificationEmail: string;
   emailFrom: string;
+  eventTitle: string;
 }
 
 export function getServerEnv(): ServerEnv {
@@ -23,6 +24,7 @@ export function getServerEnv(): ServerEnv {
     resendApiKey: readEnv("RESEND_API_KEY"),
     notificationEmail: readEnv("NOTIFICATION_EMAIL"),
     emailFrom: readEnv("EMAIL_FROM"),
+    eventTitle: readEnvWithFallback("EVENT_TITLE", "VITE_PUBLIC_EVENT_TITLE", "Event Registration"),
   };
 }
 
@@ -30,4 +32,8 @@ function readEnv(name: string): string {
   const value = env[name];
   if (!value) throw new Error(`Missing environment variable: ${name}`);
   return value;
+}
+
+function readEnvWithFallback(name: string, fallbackName: string, defaultValue: string): string {
+  return env[name] || env[fallbackName] || defaultValue;
 }

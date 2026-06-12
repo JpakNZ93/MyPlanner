@@ -75,7 +75,13 @@ You can also test the complete API and Stripe webhook flow from a Vercel deploym
 
 Copy the `.env.example` values into the Vercel project settings and replace each example value with the project-specific value. Keep secret keys server-side only; do not expose Stripe, Google, or Resend secrets through `VITE_` variables.
 
+Set `EVENT_TITLE` for the server-side notification email title. The frontend title can use `VITE_PUBLIC_EVENT_TITLE`; when `EVENT_TITLE` is omitted, the server falls back to `VITE_PUBLIC_EVENT_TITLE` and then `Event Registration`.
+
 The included `vercel.json` rewrites `/success` and `/cancel` to the React app so Stripe redirects load the client-rendered confirmation pages. `/api/*` routes are not rewritten and continue to resolve to Vercel functions.
+
+## Reliability and operations
+
+Google Sheets idempotency prevents sequential duplicate Stripe webhook rows by Stripe session ID, but it is not an atomic concurrency lock. For very high-volume deployments, use a datastore with atomic uniqueness for paid session IDs.
 
 ## Sandbox verification
 

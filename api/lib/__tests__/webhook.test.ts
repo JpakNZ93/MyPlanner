@@ -26,6 +26,7 @@ const serverEnv = {
   resendApiKey: "re_123",
   notificationEmail: "registrations@example.test",
   emailFrom: "Events <events@example.test>",
+  eventTitle: "Youth Conference",
 };
 
 vi.mock("../env", () => ({
@@ -227,6 +228,42 @@ describe("stripe webhook API", () => {
       expect.any(Error),
     );
     consoleError.mockRestore();
+  });
+
+  it("returns a retryable 500 and does not email when paid registration append fails", async () => {
+    constructEvent.mockReturnValue(
+      checkoutCompletedEvent({
+        id: "cs_test_123",
+        payment_status: "paid",
+        metadata: { registrationId: "reg_123" },
+      }),
+    );
+    hasPaidSession.mockResolvedValue(false);
+    findPendingRegistration.mockResolvedValue({
+      registrationId: "reg_123",
+      createdAt: "2026-06-12T00:00:00.000Z",
+      payload: {
+        seatCount: 1,
+        primaryAttendee: {
+          firstName: "Jane",
+          lastName: "Citizen",
+          mobile: "0412345678",
+          email: "jane@example.com",
+          church: "Central Church",
+        },
+        additionalAttendees: [],
+      },
+    });
+    appendPaidRegistration.mockRejectedValue(new Error("Google Sheets append failed"));
+    const { default: handler } = await import("../../stripe-webhook");
+    const response = createResponse();
+
+    await handler(createRequest(), response);
+
+    expect(response.statusCode).toBe(500);
+    expect(JSON.parse(response.body)).toEqual({ error: "Paid registration could not be saved" });
+    expect(appendPaidRegistration).toHaveBeenCalledOnce();
+    expect(sendRegistrationEmail).not.toHaveBeenCalled();
   });
 
   it("passes the streamed raw body to Stripe signature verification", async () => {

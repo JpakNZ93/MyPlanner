@@ -22,6 +22,7 @@ const env = {
   resendApiKey: "re_123",
   notificationEmail: "registrations@example.test",
   emailFrom: "Events <events@example.test>",
+  eventTitle: "Youth Conference",
 };
 
 const paidRecord = {
@@ -47,6 +48,22 @@ const paidRecord = {
 describe("registration email", () => {
   beforeEach(() => {
     sendEmail.mockReset();
+  });
+
+  it("includes the event title in the notification body", async () => {
+    sendEmail.mockResolvedValue({
+      data: { id: "email_123" },
+      error: null,
+    });
+    const { sendRegistrationEmail } = await import("../email");
+
+    await sendRegistrationEmail(env, paidRecord);
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining("Event: Youth Conference"),
+      }),
+    );
   });
 
   it("throws when Resend resolves with an error", async () => {
