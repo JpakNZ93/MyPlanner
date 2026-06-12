@@ -86,4 +86,27 @@ describe("registration helpers", () => {
     expect(normalized.primaryAttendee.email).toBe("jane@example.com");
     expect(normalized.additionalAttendees).toHaveLength(1);
   });
+
+  it("allows whitespace-only optional additional attendee email on blank rows", () => {
+    const input = {
+      seatCount: 1,
+      primaryAttendee: {
+        firstName: "Jane",
+        lastName: "Citizen",
+        mobile: "0412345678",
+        email: "jane@example.com",
+        church: "Central Church",
+      },
+      additionalAttendees: [
+        { firstName: "", lastName: "", church: "", email: "   " },
+      ],
+    };
+
+    let normalized: ReturnType<typeof normalizeRegistration> | undefined;
+
+    expect(() => {
+      normalized = normalizeRegistration(input);
+    }).not.toThrow();
+    expect(normalized?.additionalAttendees).toHaveLength(0);
+  });
 });

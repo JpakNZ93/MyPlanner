@@ -40,6 +40,12 @@ export interface PaidRegistrationRecord extends RegistrationPayload {
 
 const requiredString = z.string().trim().min(1);
 const optionalString = z.string().trim().optional();
+const optionalEmail = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim() : value),
+  z
+    .union([z.literal(""), z.string().email().transform((email) => email.toLowerCase())])
+    .optional(),
+);
 
 export const primaryAttendeeSchema = z.object({
   firstName: requiredString,
@@ -54,13 +60,7 @@ export const additionalAttendeeSchema = z.object({
   lastName: optionalString.default(""),
   church: optionalString.default(""),
   mobile: optionalString,
-  email: z
-    .string()
-    .trim()
-    .email()
-    .transform((email) => email.toLowerCase())
-    .optional()
-    .or(z.literal("")),
+  email: optionalEmail,
   usesPrimaryContact: z.boolean().optional().default(false),
 });
 
