@@ -12,7 +12,7 @@ export async function sendRegistrationEmail(env: ServerEnv, record: PaidRegistra
         .join(", ")
     : "No additional attendee names provided";
 
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: env.emailFrom,
     to: env.notificationEmail,
     subject: `Paid registration: ${primaryName}`,
@@ -28,4 +28,8 @@ export async function sendRegistrationEmail(env: ServerEnv, record: PaidRegistra
       `Additional attendees: ${attendeeSummary}`,
     ].join("\n"),
   });
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
 }
