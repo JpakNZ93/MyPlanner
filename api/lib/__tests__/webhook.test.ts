@@ -6,12 +6,16 @@ const {
   appendPaidRegistration,
   constructEvent,
   findPendingRegistration,
+  getEmailEnv,
+  getGoogleSheetsEnv,
   hasPaidSession,
   sendRegistrationEmail,
 } = vi.hoisted(() => ({
   appendPaidRegistration: vi.fn(),
   constructEvent: vi.fn(),
   findPendingRegistration: vi.fn(),
+  getEmailEnv: vi.fn(),
+  getGoogleSheetsEnv: vi.fn(),
   hasPaidSession: vi.fn(),
   sendRegistrationEmail: vi.fn(),
 }));
@@ -30,7 +34,9 @@ const serverEnv = {
 };
 
 vi.mock("../env.js", () => ({
-  getServerEnv: () => serverEnv,
+  getEmailEnv,
+  getGoogleSheetsEnv,
+  getWebhookEnv: () => serverEnv,
 }));
 
 vi.mock("../google-sheets.js", () => ({
@@ -95,8 +101,12 @@ describe("stripe webhook API", () => {
     appendPaidRegistration.mockReset();
     constructEvent.mockReset();
     findPendingRegistration.mockReset();
+    getEmailEnv.mockReset();
+    getGoogleSheetsEnv.mockReset();
     hasPaidSession.mockReset();
     sendRegistrationEmail.mockReset();
+    getEmailEnv.mockReturnValue(serverEnv);
+    getGoogleSheetsEnv.mockReturnValue(serverEnv);
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-12T00:10:00.000Z"));
   });
@@ -164,6 +174,31 @@ describe("stripe webhook API", () => {
     expect(findPendingRegistration).toHaveBeenCalledWith("reg_123");
     expect(appendPaidRegistration).toHaveBeenCalledWith(paidRecord);
     expect(sendRegistrationEmail).toHaveBeenCalledWith(serverEnv, paidRecord);
+  });
+
+  it("acknowledges paid checkout sessions when registration storage is not configured", async () => {
+    getGoogleSheetsEnv.mockReturnValue(null);
+    constructEvent.mockReturnValue(
+      checkoutCompletedEvent({
+        id: "cs_test_123",
+        payment_status: "paid",
+        metadata: { registrationId: "reg_123" },
+      }),
+    );
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { default: handler } = await import("../../stripe-webhook.js");
+    const response = createResponse();
+
+    await handler(createRequest(), response);
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({ received: true, storage: "not_configured" });
+    expect(hasPaidSession).not.toHaveBeenCalled();
+    expect(findPendingRegistration).not.toHaveBeenCalled();
+    expect(appendPaidRegistration).not.toHaveBeenCalled();
+    expect(sendRegistrationEmail).not.toHaveBeenCalled();
+    expect(consoleWarn).toHaveBeenCalledWith("Registration storage is not configured");
+    consoleWarn.mockRestore();
   });
 
   it("ignores duplicate paid sessions", async () => {

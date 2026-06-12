@@ -1,24 +1,25 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { appendPendingRegistration, createCheckoutSession } = vi.hoisted(() => ({
+const { appendPendingRegistration, createCheckoutSession, getGoogleSheetsEnv } = vi.hoisted(() => ({
   appendPendingRegistration: vi.fn(),
   createCheckoutSession: vi.fn(),
+  getGoogleSheetsEnv: vi.fn(),
 }));
 
 vi.mock("../env.js", () => ({
-  getServerEnv: () => ({
+  getCheckoutEnv: () => ({
     appUrl: "https://example.test",
     stripeSecretKey: "sk_test_123",
-    stripeWebhookSecret: "whsec_123",
+  }),
+  getGoogleSheetsEnv,
+}));
+
+const googleSheetsEnv = {
     googleSheetId: "sheet_123",
     googleClientEmail: "service@example.test",
     googlePrivateKey: "private-key",
-    resendApiKey: "re_123",
-    notificationEmail: "registrations@example.test",
-    emailFrom: "Events <events@example.test>",
-  }),
-}));
+};
 
 vi.mock("../google-sheets.js", () => ({
   createRegistrationSheetClient: () => ({ appendPendingRegistration }),
@@ -58,6 +59,8 @@ describe("create checkout session API", () => {
   beforeEach(() => {
     appendPendingRegistration.mockReset();
     createCheckoutSession.mockReset();
+    getGoogleSheetsEnv.mockReset();
+    getGoogleSheetsEnv.mockReturnValue(googleSheetsEnv);
   });
 
   it("creates a pending registration and returns a checkout URL", async () => {
@@ -99,6 +102,38 @@ describe("create checkout session API", () => {
         ],
       }),
     );
+  });
+
+  it("creates a checkout URL when registration storage is not configured", async () => {
+    getGoogleSheetsEnv.mockReturnValue(null);
+    createCheckoutSession.mockResolvedValue({ url: "https://checkout.stripe.test/session" });
+    const { default: handler } = await import("../../create-checkout-session.js");
+    const response = createResponse();
+
+    await handler(
+      {
+        method: "POST",
+        body: {
+          seatCount: 1,
+          primaryAttendee: {
+            firstName: "Jane",
+            lastName: "Citizen",
+            mobile: "0412345678",
+            email: "jane@example.com",
+            church: "Central Church",
+          },
+          additionalAttendees: [],
+        },
+      } as VercelRequest,
+      response,
+    );
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({
+      checkoutUrl: "https://checkout.stripe.test/session",
+    });
+    expect(appendPendingRegistration).not.toHaveBeenCalled();
+    expect(createCheckoutSession).toHaveBeenCalledOnce();
   });
 
   it("rejects invalid payloads", async () => {

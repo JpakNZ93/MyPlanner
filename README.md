@@ -73,9 +73,20 @@ You can also test the complete API and Stripe webhook flow from a Vercel deploym
 
 ## Vercel environment variables
 
-Copy the `.env.example` values into the Vercel project settings and replace each example value with the project-specific value. Keep secret keys server-side only; do not expose Stripe, Google, or Resend secrets through `VITE_` variables.
+For a Stripe Checkout-only deployment, set these production environment variables in Vercel:
 
-Set `EVENT_TITLE` for the server-side notification email title. The frontend title can use `VITE_PUBLIC_EVENT_TITLE`; when `EVENT_TITLE` is omitted, the server falls back to `VITE_PUBLIC_EVENT_TITLE` and then `Event Registration`.
+```text
+APP_URL=https://your-vercel-domain.example
+STRIPE_SECRET_KEY=sk_test_or_live_key
+```
+
+Keep secret keys server-side only; do not expose Stripe, Google, or Resend secrets through `VITE_` variables.
+
+To record registrations in Google Sheets, also set `GOOGLE_SHEET_ID`, `GOOGLE_CLIENT_EMAIL`, and `GOOGLE_PRIVATE_KEY`. When all three are omitted, Checkout still works but pending and paid registration rows are not written.
+
+To receive Resend notifications after a paid registration is saved, also set `RESEND_API_KEY`, `EMAIL_FROM`, and `NOTIFICATION_EMAIL`. Email notifications are skipped when all three are omitted.
+
+Set `STRIPE_WEBHOOK_SECRET` after creating a Stripe webhook endpoint for `/api/stripe-webhook` if you want Stripe to call the webhook after checkout. Set `EVENT_TITLE` for the server-side notification email title. The frontend title can use `VITE_PUBLIC_EVENT_TITLE`; when `EVENT_TITLE` is omitted, the server falls back to `VITE_PUBLIC_EVENT_TITLE` and then `Event Registration`.
 
 The included `vercel.json` rewrites `/success` and `/cancel` to the React app so Stripe redirects load the client-rendered confirmation pages. `/api/*` routes are not rewritten and continue to resolve to Vercel functions.
 

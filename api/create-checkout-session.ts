@@ -8,7 +8,7 @@ import {
   normalizeRegistration,
   PRICE_PER_SEAT_CENTS,
 } from "../src/lib/registration.js";
-import { getServerEnv } from "./lib/env.js";
+import { getCheckoutEnv, getGoogleSheetsEnv } from "./lib/env.js";
 import { createRegistrationSheetClient } from "./lib/google-sheets.js";
 import { sendJson, sendMethodNotAllowed } from "./lib/http.js";
 
@@ -26,12 +26,15 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return;
   }
 
-  const env = getServerEnv();
+  const env = getCheckoutEnv();
+  const googleSheetsEnv = getGoogleSheetsEnv();
   const registrationId = crypto.randomUUID();
   const createdAt = new Date().toISOString();
-  const sheetClient = createRegistrationSheetClient(env);
 
-  await sheetClient.appendPendingRegistration({ registrationId, createdAt, payload });
+  if (googleSheetsEnv) {
+    const sheetClient = createRegistrationSheetClient(googleSheetsEnv);
+    await sheetClient.appendPendingRegistration({ registrationId, createdAt, payload });
+  }
 
   const stripe = new Stripe(env.stripeSecretKey);
   const session = await stripe.checkout.sessions.create({

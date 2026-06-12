@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 
-import type { ServerEnv } from "./env.js";
+import type { GoogleSheetsEnv } from "./env.js";
 import type { PaidRegistrationRecord } from "../../src/lib/registration.js";
 import {
   paidRegistrationToRow,
@@ -20,7 +20,7 @@ export interface RegistrationSheetClient {
   appendPaidRegistration(record: PaidRegistrationRecord): Promise<void>;
 }
 
-export function createRegistrationSheetClient(env: ServerEnv): RegistrationSheetClient {
+export function createRegistrationSheetClient(env: GoogleSheetsEnv): RegistrationSheetClient {
   const auth = new google.auth.JWT({
     email: env.googleClientEmail,
     key: env.googlePrivateKey,

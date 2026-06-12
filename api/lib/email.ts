@@ -1,9 +1,9 @@
 import { Resend } from "resend";
 
 import type { PaidRegistrationRecord } from "../../src/lib/registration.js";
-import type { ServerEnv } from "./env.js";
+import type { EmailEnv } from "./env.js";
 
-export async function sendRegistrationEmail(env: ServerEnv, record: PaidRegistrationRecord) {
+export async function sendRegistrationEmail(env: EmailEnv, record: PaidRegistrationRecord) {
   const resend = new Resend(env.resendApiKey);
   const primaryName = `${record.primaryAttendee.firstName} ${record.primaryAttendee.lastName}`;
   const attendeeSummary = record.additionalAttendees.length
