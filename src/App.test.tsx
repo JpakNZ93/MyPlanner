@@ -23,10 +23,13 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
+    const seatCountInput = screen.getByLabelText(/number of seats/i);
     await user.click(screen.getByRole("button", { name: /add another attendee/i }));
+    expect(seatCountInput).toHaveValue(2);
     expect(screen.getByLabelText(/additional attendee 1 first name/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /remove attendee 1/i }));
+    expect(seatCountInput).toHaveValue(1);
     expect(screen.queryByLabelText(/additional attendee 1 first name/i)).not.toBeInTheDocument();
   });
 

@@ -98,7 +98,7 @@ export function App() {
 
   const removeAdditionalAttendee = (id: number) => {
     setAdditionalAttendees((current) => current.filter((attendee) => attendee.id !== id));
-    setSeatCount((current) => Math.max(1, current));
+    setSeatCount((current) => Math.max(1, current - 1));
   };
 
   const updateSeatCount = (event: ChangeEvent<HTMLInputElement>) => {
