@@ -254,6 +254,11 @@ input[type="checkbox"] {
   padding: 8px 0;
 }
 
+.link-button {
+  color: #3157d5;
+  font-weight: 800;
+}
+
 .alert {
   background: #fff1f0;
   border: 1px solid #ffccc7;

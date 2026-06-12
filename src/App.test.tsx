@@ -19,6 +19,28 @@ afterEach(() => {
 });
 
 describe("App", () => {
+  it("renders the success page when Stripe redirects after payment", () => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { assign: vi.fn(), pathname: "/success" },
+    });
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: /payment received/i })).toBeInTheDocument();
+  });
+
+  it("renders the cancel page when payment is cancelled", () => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { assign: vi.fn(), pathname: "/cancel" },
+    });
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: /payment cancelled/i })).toBeInTheDocument();
+  });
+
   it("adds and removes additional attendees", async () => {
     const user = userEvent.setup();
     render(<App />);

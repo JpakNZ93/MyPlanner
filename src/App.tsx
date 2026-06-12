@@ -55,6 +55,47 @@ const emptyPrimaryAttendee: PrimaryAttendeeForm = {
 const formatCurrency = (cents: number) => `${DISPLAY_CURRENCY} $${(cents / 100).toFixed(2)}`;
 
 export function App() {
+  const pathName = window.location.pathname;
+
+  if (pathName === "/success") {
+    return <SuccessPage />;
+  }
+
+  if (pathName === "/cancel") {
+    return <CancelPage />;
+  }
+
+  return <RegistrationPage />;
+}
+
+function SuccessPage() {
+  return (
+    <main className="page-shell">
+      <section className="registration-card" aria-labelledby="success-title">
+        <p className="eyebrow">Stripe payment complete</p>
+        <h1 id="success-title">Payment received</h1>
+        <p>Thank you. Your registration payment was received, and your registration is being processed.</p>
+      </section>
+    </main>
+  );
+}
+
+function CancelPage() {
+  return (
+    <main className="page-shell">
+      <section className="registration-card" aria-labelledby="cancel-title">
+        <p className="eyebrow">Checkout cancelled</p>
+        <h1 id="cancel-title">Payment cancelled</h1>
+        <p>Your payment was not completed. Return to the registration page when you are ready to try again.</p>
+        <a className="link-button" href="/">
+          Return to registration
+        </a>
+      </section>
+    </main>
+  );
+}
+
+function RegistrationPage() {
   const [seatCount, setSeatCount] = useState(1);
   const [primaryAttendee, setPrimaryAttendee] = useState<PrimaryAttendeeForm>(emptyPrimaryAttendee);
   const [additionalAttendees, setAdditionalAttendees] = useState<AdditionalAttendeeForm[]>([]);
