@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
@@ -28,6 +28,17 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: /remove attendee 1/i }));
     expect(screen.queryByLabelText(/additional attendee 1 first name/i)).not.toBeInTheDocument();
+  });
+
+  it("increments the seat count when adding another attendee", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const seatCountInput = screen.getByLabelText(/number of seats/i);
+    fireEvent.change(seatCountInput, { target: { value: "3" } });
+    await user.click(screen.getByRole("button", { name: /add another attendee/i }));
+
+    expect(seatCountInput).toHaveValue(4);
   });
 
   it("submits valid registration details and redirects to Stripe Checkout", async () => {

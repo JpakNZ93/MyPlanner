@@ -93,7 +93,7 @@ export function App() {
       },
     ]);
     setNextAttendeeId((current) => current + 1);
-    setSeatCount((current) => Math.max(current, additionalAttendees.length + 2));
+    setSeatCount((current) => Math.max(current + 1, additionalAttendees.length + 2));
   };
 
   const removeAdditionalAttendee = (id: number) => {
