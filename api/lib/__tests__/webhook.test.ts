@@ -29,11 +29,11 @@ const serverEnv = {
   eventTitle: "Youth Conference",
 };
 
-vi.mock("../env", () => ({
+vi.mock("../env.js", () => ({
   getServerEnv: () => serverEnv,
 }));
 
-vi.mock("../google-sheets", () => ({
+vi.mock("../google-sheets.js", () => ({
   createRegistrationSheetClient: () => ({
     appendPaidRegistration,
     findPendingRegistration,
@@ -41,7 +41,7 @@ vi.mock("../google-sheets", () => ({
   }),
 }));
 
-vi.mock("../email", () => ({
+vi.mock("../email.js", () => ({
   sendRegistrationEmail,
 }));
 
@@ -131,7 +131,7 @@ describe("stripe webhook API", () => {
         ],
       },
     });
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const response = createResponse();
 
     await handler(createRequest(), response);
@@ -175,7 +175,7 @@ describe("stripe webhook API", () => {
       }),
     );
     hasPaidSession.mockResolvedValue(true);
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const response = createResponse();
 
     await handler(createRequest(), response);
@@ -214,7 +214,7 @@ describe("stripe webhook API", () => {
     });
     sendRegistrationEmail.mockRejectedValue(new Error("Resend failed"));
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const response = createResponse();
 
     await handler(createRequest(), response);
@@ -255,7 +255,7 @@ describe("stripe webhook API", () => {
       },
     });
     appendPaidRegistration.mockRejectedValue(new Error("Google Sheets append failed"));
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const response = createResponse();
 
     await handler(createRequest(), response);
@@ -268,7 +268,7 @@ describe("stripe webhook API", () => {
 
   it("passes the streamed raw body to Stripe signature verification", async () => {
     constructEvent.mockReturnValue({ type: "customer.created", data: { object: {} } });
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const request = Object.assign(Readable.from(["streamed-stripe-body"]), {
       method: "POST",
       headers: { "stripe-signature": "sig_123" },

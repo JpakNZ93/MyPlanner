@@ -6,11 +6,11 @@ import {
   CURRENCY,
   PRICE_PER_SEAT_CENTS,
   type PaidRegistrationRecord,
-} from "../src/lib/registration";
-import { getServerEnv } from "./lib/env";
-import { sendRegistrationEmail } from "./lib/email";
-import { createRegistrationSheetClient } from "./lib/google-sheets";
-import { sendJson, sendMethodNotAllowed } from "./lib/http";
+} from "../src/lib/registration.js";
+import { getServerEnv } from "./lib/env.js";
+import { sendRegistrationEmail } from "./lib/email.js";
+import { createRegistrationSheetClient } from "./lib/google-sheets.js";
+import { sendJson, sendMethodNotAllowed } from "./lib/http.js";
 
 export const config = {
   api: {

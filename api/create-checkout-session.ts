@@ -7,10 +7,10 @@ import {
   DISPLAY_CURRENCY,
   normalizeRegistration,
   PRICE_PER_SEAT_CENTS,
-} from "../src/lib/registration";
-import { getServerEnv } from "./lib/env";
-import { createRegistrationSheetClient } from "./lib/google-sheets";
-import { sendJson, sendMethodNotAllowed } from "./lib/http";
+} from "../src/lib/registration.js";
+import { getServerEnv } from "./lib/env.js";
+import { createRegistrationSheetClient } from "./lib/google-sheets.js";
+import { sendJson, sendMethodNotAllowed } from "./lib/http.js";
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   if (request.method !== "POST") {

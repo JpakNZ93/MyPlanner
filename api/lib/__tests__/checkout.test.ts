@@ -6,7 +6,7 @@ const { appendPendingRegistration, createCheckoutSession } = vi.hoisted(() => ({
   createCheckoutSession: vi.fn(),
 }));
 
-vi.mock("../env", () => ({
+vi.mock("../env.js", () => ({
   getServerEnv: () => ({
     appUrl: "https://example.test",
     stripeSecretKey: "sk_test_123",
@@ -20,7 +20,7 @@ vi.mock("../env", () => ({
   }),
 }));
 
-vi.mock("../google-sheets", () => ({
+vi.mock("../google-sheets.js", () => ({
   createRegistrationSheetClient: () => ({ appendPendingRegistration }),
 }));
 
@@ -62,7 +62,7 @@ describe("create checkout session API", () => {
 
   it("creates a pending registration and returns a checkout URL", async () => {
     createCheckoutSession.mockResolvedValue({ url: "https://checkout.stripe.test/session" });
-    const { default: handler } = await import("../../create-checkout-session");
+    const { default: handler } = await import("../../create-checkout-session.js");
     const response = createResponse();
 
     await handler(
@@ -102,7 +102,7 @@ describe("create checkout session API", () => {
   });
 
   it("rejects invalid payloads", async () => {
-    const { default: handler } = await import("../../create-checkout-session");
+    const { default: handler } = await import("../../create-checkout-session.js");
     const response = createResponse();
 
     await handler({ method: "POST", body: { seatCount: 0 } } as VercelRequest, response);

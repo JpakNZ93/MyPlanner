@@ -1,4 +1,4 @@
-import type { PaidRegistrationRecord, RegistrationPayload } from "../../src/lib/registration";
+import type { PaidRegistrationRecord, RegistrationPayload } from "../../src/lib/registration.js";
 
 export interface PendingRegistrationRecord {
   registrationId: string;

@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
-import type { PaidRegistrationRecord } from "../../src/lib/registration";
-import type { ServerEnv } from "./env";
+import type { PaidRegistrationRecord } from "../../src/lib/registration.js";
+import type { ServerEnv } from "./env.js";
 
 export async function sendRegistrationEmail(env: ServerEnv, record: PaidRegistrationRecord) {
   const resend = new Resend(env.resendApiKey);

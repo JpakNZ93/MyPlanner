@@ -1,13 +1,13 @@
 import { google } from "googleapis";
 
-import type { ServerEnv } from "./env";
-import type { PaidRegistrationRecord } from "../../src/lib/registration";
+import type { ServerEnv } from "./env.js";
+import type { PaidRegistrationRecord } from "../../src/lib/registration.js";
 import {
   paidRegistrationToRow,
   pendingRegistrationToRow,
   rowToPendingRegistration,
   type PendingRegistrationRecord,
-} from "./registration-records";
+} from "./registration-records.js";
 
 const pendingRange = "PendingRegistrations!A:C";
 const paidRange = "PaidRegistrations!A:O";
