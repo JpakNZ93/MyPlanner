@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const CURRENCY = "aud";
 export const DISPLAY_CURRENCY = "AUD";
+export const MAX_SEAT_COUNT = 10;
 export const PRICE_PER_SEAT_CENTS = 5000;
 
 export interface PrimaryAttendee {
@@ -66,7 +67,7 @@ export const additionalAttendeeSchema = z.object({
 
 export const registrationSchema = z
   .object({
-    seatCount: z.coerce.number().int().min(1),
+    seatCount: z.coerce.number().int().min(1).max(MAX_SEAT_COUNT),
     primaryAttendee: primaryAttendeeSchema,
     additionalAttendees: z.array(additionalAttendeeSchema).default([]),
   })
