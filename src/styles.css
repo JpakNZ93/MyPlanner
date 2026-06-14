@@ -178,7 +178,17 @@ input[type="checkbox"] {
   grid-template-columns: 44px minmax(72px, 1fr) 44px;
 }
 
-.seat-picker input {
+.seat-count-display {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d5dbea;
+  border-radius: 12px;
+  color: #172033;
+  display: flex;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 46px;
+  padding: 10px 12px;
   text-align: center;
 }
 
