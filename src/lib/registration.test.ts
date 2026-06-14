@@ -66,6 +66,22 @@ describe("registration helpers", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects a seat count above 10", () => {
+    const result = registrationSchema.safeParse({
+      seatCount: 11,
+      primaryAttendee: {
+        firstName: "Jane",
+        lastName: "Citizen",
+        mobile: "0412345678",
+        email: "jane@example.com",
+        church: "Central Church",
+      },
+      additionalAttendees: [],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("trims strings and removes blank additional attendee rows", () => {
     const normalized = normalizeRegistration({
       seatCount: 3,

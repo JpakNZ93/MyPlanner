@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import {
   DISPLAY_CURRENCY,
+  MAX_SEAT_COUNT,
   PRICE_PER_SEAT_CENTS,
   calculateTotalAmount,
   normalizeRegistration,
@@ -53,6 +54,11 @@ const emptyPrimaryAttendee: PrimaryAttendeeForm = {
   email: "",
   church: "",
 };
+
+const MIN_SEAT_COUNT = 1;
+
+const clampSeatCount = (value: number) =>
+  Math.min(MAX_SEAT_COUNT, Math.max(MIN_SEAT_COUNT, value));
 
 const formatCurrency = (cents: number) => `${DISPLAY_CURRENCY} $${(cents / 100).toFixed(2)}`;
 
@@ -125,6 +131,10 @@ function RegistrationPage() {
   };
 
   const addAdditionalAttendee = () => {
+    if (additionalAttendees.length >= MAX_SEAT_COUNT - 1) {
+      return;
+    }
+
     setAdditionalAttendees((current) => [
       ...current,
       {
@@ -138,16 +148,20 @@ function RegistrationPage() {
       },
     ]);
     setNextAttendeeId((current) => current + 1);
-    setSeatCount((current) => Math.max(current + 1, additionalAttendees.length + 2));
+    setSeatCount((current) => clampSeatCount(Math.max(current + 1, additionalAttendees.length + 2)));
   };
 
   const removeAdditionalAttendee = (id: number) => {
     setAdditionalAttendees((current) => current.filter((attendee) => attendee.id !== id));
-    setSeatCount((current) => Math.max(1, current - 1));
+    setSeatCount((current) => clampSeatCount(current - 1));
   };
 
   const updateSeatCount = (event: ChangeEvent<HTMLInputElement>) => {
-    setSeatCount(Math.max(1, Number(event.target.value)));
+    setSeatCount(clampSeatCount(Number(event.target.value)));
+  };
+
+  const adjustSeatCount = (amount: number) => {
+    setSeatCount((current) => clampSeatCount(current + amount));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -275,15 +289,42 @@ function RegistrationPage() {
           <fieldset>
             <legend>Seats</legend>
             <div className="seat-row">
-              <label>
-                Number of seats
-                <input
-                  min={1}
-                  type="number"
-                  value={seatCount}
-                  onChange={updateSeatCount}
-                />
-              </label>
+              <div className="seat-control">
+                <label htmlFor="seat-count">Number of seats</label>
+                <div className="seat-picker">
+                  <button
+                    aria-label="Decrease seats"
+                    className="seat-picker-button"
+                    disabled={seatCount <= MIN_SEAT_COUNT}
+                    type="button"
+                    onClick={() => adjustSeatCount(-1)}
+                  >
+                    -
+                  </button>
+                  <input
+                    aria-describedby="seat-count-help"
+                    id="seat-count"
+                    inputMode="numeric"
+                    max={MAX_SEAT_COUNT}
+                    min={MIN_SEAT_COUNT}
+                    type="number"
+                    value={seatCount}
+                    onChange={updateSeatCount}
+                  />
+                  <button
+                    aria-label="Increase seats"
+                    className="seat-picker-button"
+                    disabled={seatCount >= MAX_SEAT_COUNT}
+                    type="button"
+                    onClick={() => adjustSeatCount(1)}
+                  >
+                    +
+                  </button>
+                </div>
+                <span className="field-help" id="seat-count-help">
+                  Choose 1 to {MAX_SEAT_COUNT} seats.
+                </span>
+              </div>
               <p className="total">Total: {totalAmount}</p>
             </div>
           </fieldset>
@@ -292,7 +333,12 @@ function RegistrationPage() {
             <legend>Additional attendees</legend>
             <div className="fieldset-heading">
               <p>Add guest details now or leave them blank and provide them later.</p>
-              <button className="secondary-button" type="button" onClick={addAdditionalAttendee}>
+              <button
+                className="secondary-button"
+                disabled={additionalAttendees.length >= MAX_SEAT_COUNT - 1}
+                type="button"
+                onClick={addAdditionalAttendee}
+              >
                 Add another attendee
               </button>
             </div>

@@ -166,6 +166,44 @@ input[type="checkbox"] {
   grid-template-columns: minmax(160px, 240px) 1fr;
 }
 
+.seat-control {
+  display: grid;
+  gap: 8px;
+}
+
+.seat-picker {
+  align-items: stretch;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 44px minmax(72px, 1fr) 44px;
+}
+
+.seat-picker input {
+  text-align: center;
+}
+
+.seat-picker-button {
+  background: #eaf0ff;
+  border: 1px solid #c8d5ff;
+  border-radius: 12px;
+  color: #2547ba;
+  font-size: 1.15rem;
+  font-weight: 800;
+  min-height: 46px;
+}
+
+.seat-picker-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.field-help {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .total {
   background: #eef3ff;
   border-radius: 16px;

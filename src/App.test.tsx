@@ -66,6 +66,30 @@ describe("App", () => {
     expect(seatCountInput).toHaveValue(4);
   });
 
+  it("renders a seat scroller limited to 10 seats", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const seatCountInput = screen.getByLabelText(/number of seats/i);
+
+    expect(seatCountInput).toHaveAttribute("max", "10");
+    expect(screen.getByRole("button", { name: /decrease seats/i })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: /increase seats/i }));
+
+    expect(seatCountInput).toHaveValue(2);
+    expect(screen.getByRole("button", { name: /decrease seats/i })).toBeEnabled();
+  });
+
+  it("clamps typed seat counts to the 10 seat maximum", () => {
+    render(<App />);
+
+    const seatCountInput = screen.getByLabelText(/number of seats/i);
+    fireEvent.change(seatCountInput, { target: { value: "11" } });
+
+    expect(seatCountInput).toHaveValue(10);
+  });
+
   it("submits valid registration details and redirects to Stripe Checkout", async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValue({
