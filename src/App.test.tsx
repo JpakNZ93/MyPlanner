@@ -77,6 +77,7 @@ describe("App", () => {
 
     expect(seatCountDisplay).toHaveTextContent("1");
     expect(screen.queryByRole("spinbutton", { name: /number of seats/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: /number of seats/i })).not.toBeInTheDocument();
     expect(decreaseButton).toBeDisabled();
 
     await user.click(increaseButton);
