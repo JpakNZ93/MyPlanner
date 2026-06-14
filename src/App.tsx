@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import {
   DISPLAY_CURRENCY,
   MAX_SEAT_COUNT,
@@ -156,10 +156,6 @@ function RegistrationPage() {
     setSeatCount((current) => clampSeatCount(current - 1));
   };
 
-  const updateSeatCount = (event: ChangeEvent<HTMLInputElement>) => {
-    setSeatCount(clampSeatCount(Number(event.target.value)));
-  };
-
   const adjustSeatCount = (amount: number) => {
     setSeatCount((current) => clampSeatCount(current + amount));
   };
@@ -301,16 +297,14 @@ function RegistrationPage() {
                   >
                     -
                   </button>
-                  <input
+                  <output
                     aria-describedby="seat-count-help"
+                    aria-live="polite"
+                    className="seat-count-display"
                     id="seat-count"
-                    inputMode="numeric"
-                    max={MAX_SEAT_COUNT}
-                    min={MIN_SEAT_COUNT}
-                    type="number"
-                    value={seatCount}
-                    onChange={updateSeatCount}
-                  />
+                  >
+                    {seatCount}
+                  </output>
                   <button
                     aria-label="Increase seats"
                     className="seat-picker-button"
