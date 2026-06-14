@@ -33,6 +33,25 @@ npx vercel dev
 
 You can also test the complete API and Stripe webhook flow from a Vercel deployment.
 
+## CI/CD
+
+This repo uses a hybrid Vercel and GitHub Actions deployment flow.
+
+- Vercel remains the deployment engine through its Git integration.
+- Pull requests and feature branches create Vercel Preview deployments.
+- Merges to `main` automatically create Vercel Production deployments.
+- GitHub Actions runs the `CI` workflow on pull requests targeting `main` and pushes to `main`.
+- The `CI` workflow installs dependencies with `npm ci`, then runs `npm run lint`, `npm run test`, and `npm run build`.
+
+Recommended GitHub branch protection for `main`:
+
+1. Require a pull request before merging.
+2. Require status checks to pass before merging.
+3. Require the GitHub Actions `CI` check.
+4. Keep Vercel deployment checks visible on pull requests.
+
+Do not add Vercel deployment commands or Vercel tokens to GitHub Actions for this setup. Vercel should continue to own preview and production deployments.
+
 ## Google Sheets setup
 
 1. Create a Google Sheet for registrations.
