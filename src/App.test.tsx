@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
@@ -47,11 +47,11 @@ describe("App", () => {
 
     const seatCountDisplay = screen.getByLabelText(/number of seats/i);
     await user.click(screen.getByRole("button", { name: /add another attendee/i }));
-    expect(seatCountDisplay).toHaveTextContent("2");
+    expect(seatCountDisplay).toHaveTextContent(/^2$/);
     expect(screen.getByLabelText(/additional attendee 1 first name/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /remove attendee 1/i }));
-    expect(seatCountDisplay).toHaveTextContent("1");
+    expect(seatCountDisplay).toHaveTextContent(/^1$/);
     expect(screen.queryByLabelText(/additional attendee 1 first name/i)).not.toBeInTheDocument();
   });
 
@@ -64,32 +64,39 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: /increase seats/i }));
     await user.click(screen.getByRole("button", { name: /add another attendee/i }));
 
-    expect(seatCountDisplay).toHaveTextContent("4");
+    expect(seatCountDisplay).toHaveTextContent(/^4$/);
   });
 
   it("renders a button-only seat stepper limited to 10 seats", async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    const seatCountDisplay = screen.getByLabelText(/number of seats/i);
-    const decreaseButton = screen.getByRole("button", { name: /decrease seats/i });
-    const increaseButton = screen.getByRole("button", { name: /increase seats/i });
+    const seatsGroup = screen.getByRole("group", { name: /seats/i });
+    const seats = within(seatsGroup);
+    const seatCountDisplay = seats.getByLabelText(/number of seats/i);
+    const decreaseButton = seats.getByRole("button", { name: /decrease seats/i });
+    const increaseButton = seats.getByRole("button", { name: /increase seats/i });
 
-    expect(seatCountDisplay).toHaveTextContent("1");
-    expect(screen.queryByRole("spinbutton", { name: /number of seats/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("textbox", { name: /number of seats/i })).not.toBeInTheDocument();
+    expect(seatCountDisplay).toHaveTextContent(/^1$/);
+    expect(seats.queryByRole("spinbutton", { name: /number of seats/i })).not.toBeInTheDocument();
+    expect(seats.queryByRole("textbox", { name: /number of seats/i })).not.toBeInTheDocument();
     expect(decreaseButton).toBeDisabled();
 
     await user.click(increaseButton);
 
-    expect(seatCountDisplay).toHaveTextContent("2");
+    expect(seatCountDisplay).toHaveTextContent(/^2$/);
     expect(decreaseButton).toBeEnabled();
 
-    for (let count = 2; count < 10; count += 1) {
+    await user.click(decreaseButton);
+
+    expect(seatCountDisplay).toHaveTextContent(/^1$/);
+    expect(decreaseButton).toBeDisabled();
+
+    for (let count = 1; count < 10; count += 1) {
       await user.click(increaseButton);
     }
 
-    expect(seatCountDisplay).toHaveTextContent("10");
+    expect(seatCountDisplay).toHaveTextContent(/^10$/);
     expect(increaseButton).toBeDisabled();
   });
 
