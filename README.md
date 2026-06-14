@@ -35,7 +35,7 @@ You can also test the complete API and Stripe webhook flow from a Vercel deploym
 
 ## CI/CD
 
-This repo uses a hybrid Vercel and GitHub Actions deployment flow.
+Vercel handles deployments through its Git integration, while GitHub Actions runs CI checks.
 
 - Vercel remains the deployment engine through its Git integration.
 - Pull requests and feature branches create Vercel Preview deployments.
