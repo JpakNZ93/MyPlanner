@@ -1,9 +1,20 @@
-import type { PaidRegistrationRecord, RegistrationPayload } from "../../src/lib/registration.js";
+import type {
+  AdditionalAttendee,
+  PaidRegistrationRecord,
+  RegistrationPayload,
+} from "../../src/lib/registration.js";
 
 export interface PendingRegistrationRecord {
   registrationId: string;
   createdAt: string;
   payload: RegistrationPayload;
+}
+
+export interface AdditionalAttendeeRowRecord {
+  registrationId: string;
+  attendeeIndex: number;
+  attendee: AdditionalAttendee;
+  createdAt: string;
 }
 
 export function pendingRegistrationToRow(record: PendingRegistrationRecord): string[] {
@@ -64,8 +75,21 @@ export function paidRegistrationToRow(record: PaidRegistrationRecord): string[] 
     record.primaryAttendee.mobile,
     record.primaryAttendee.email,
     record.primaryAttendee.church,
-    JSON.stringify(record.additionalAttendees),
     record.createdAt,
     record.paidAt,
+  ];
+}
+
+export function additionalAttendeeToRow(record: AdditionalAttendeeRowRecord): string[] {
+  return [
+    record.registrationId,
+    String(record.attendeeIndex),
+    record.attendee.firstName,
+    record.attendee.lastName,
+    record.attendee.church,
+    record.attendee.mobile ?? "",
+    record.attendee.email ?? "",
+    String(Boolean(record.attendee.usesPrimaryContact)),
+    record.createdAt,
   ];
 }

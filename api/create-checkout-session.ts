@@ -34,6 +34,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
   if (googleSheetsEnv) {
     const sheetClient = createRegistrationSheetClient(googleSheetsEnv);
     await sheetClient.appendPendingRegistration({ registrationId, createdAt, payload });
+    await sheetClient.appendAdditionalAttendees(
+      registrationId,
+      createdAt,
+      payload.additionalAttendees,
+    );
   }
 
   const stripe = new Stripe(env.stripeSecretKey);

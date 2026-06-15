@@ -1,7 +1,13 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { appendPendingRegistration, createCheckoutSession, getGoogleSheetsEnv } = vi.hoisted(() => ({
+const {
+  appendAdditionalAttendees,
+  appendPendingRegistration,
+  createCheckoutSession,
+  getGoogleSheetsEnv,
+} = vi.hoisted(() => ({
+  appendAdditionalAttendees: vi.fn(),
   appendPendingRegistration: vi.fn(),
   createCheckoutSession: vi.fn(),
   getGoogleSheetsEnv: vi.fn(),
@@ -16,13 +22,16 @@ vi.mock("../env.js", () => ({
 }));
 
 const googleSheetsEnv = {
-    googleSheetId: "sheet_123",
-    googleClientEmail: "service@example.test",
-    googlePrivateKey: "private-key",
+  googleSheetId: "sheet_123",
+  googleClientEmail: "service@example.test",
+  googlePrivateKey: "private-key",
 };
 
 vi.mock("../google-sheets.js", () => ({
-  createRegistrationSheetClient: () => ({ appendPendingRegistration }),
+  createRegistrationSheetClient: () => ({
+    appendAdditionalAttendees,
+    appendPendingRegistration,
+  }),
 }));
 
 vi.mock("stripe", () => ({
@@ -57,13 +66,14 @@ function createResponse() {
 
 describe("create checkout session API", () => {
   beforeEach(() => {
+    appendAdditionalAttendees.mockReset();
     appendPendingRegistration.mockReset();
     createCheckoutSession.mockReset();
     getGoogleSheetsEnv.mockReset();
     getGoogleSheetsEnv.mockReturnValue(googleSheetsEnv);
   });
 
-  it("creates a pending registration and returns a checkout URL", async () => {
+  it("creates pending registration rows, child attendee rows, and returns a checkout URL", async () => {
     createCheckoutSession.mockResolvedValue({ url: "https://checkout.stripe.test/session" });
     const { default: handler } = await import("../../create-checkout-session.js");
     const response = createResponse();
@@ -72,7 +82,7 @@ describe("create checkout session API", () => {
       {
         method: "POST",
         body: {
-          seatCount: 1,
+          seatCount: 2,
           primaryAttendee: {
             firstName: "Jane",
             lastName: "Citizen",
@@ -80,24 +90,50 @@ describe("create checkout session API", () => {
             email: "jane@example.com",
             church: "Central Church",
           },
-          additionalAttendees: [],
+          additionalAttendees: [
+            {
+              firstName: "John",
+              lastName: "Citizen",
+              church: "North Church",
+              mobile: "0499999999",
+              email: "john@example.com",
+              usesPrimaryContact: false,
+            },
+          ],
         },
       } as VercelRequest,
       response,
     );
+
+    const pendingRecord = appendPendingRegistration.mock.calls[0][0];
 
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual({
       checkoutUrl: "https://checkout.stripe.test/session",
     });
     expect(appendPendingRegistration).toHaveBeenCalledOnce();
+    expect(appendAdditionalAttendees).toHaveBeenCalledWith(
+      pendingRecord.registrationId,
+      pendingRecord.createdAt,
+      [
+        {
+          firstName: "John",
+          lastName: "Citizen",
+          church: "North Church",
+          mobile: "0499999999",
+          email: "john@example.com",
+          usesPrimaryContact: false,
+        },
+      ],
+    );
     expect(createCheckoutSession).toHaveBeenCalledWith(
       expect.objectContaining({
         mode: "payment",
+        metadata: { registrationId: pendingRecord.registrationId },
         line_items: [
           expect.objectContaining({
             price_data: expect.objectContaining({ unit_amount: 5000, currency: "aud" }),
-            quantity: 1,
+            quantity: 2,
           }),
         ],
       }),
@@ -133,6 +169,7 @@ describe("create checkout session API", () => {
       checkoutUrl: "https://checkout.stripe.test/session",
     });
     expect(appendPendingRegistration).not.toHaveBeenCalled();
+    expect(appendAdditionalAttendees).not.toHaveBeenCalled();
     expect(createCheckoutSession).toHaveBeenCalledOnce();
   });
 
@@ -144,5 +181,6 @@ describe("create checkout session API", () => {
 
     expect(response.statusCode).toBe(400);
     expect(appendPendingRegistration).not.toHaveBeenCalled();
+    expect(appendAdditionalAttendees).not.toHaveBeenCalled();
   });
 });
