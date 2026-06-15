@@ -2,20 +2,20 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a GitHub Actions quality gate while keeping Vercel responsible for feature preview deployments and automatic production deployments from `main`.
+**Goal:** Add a GitHub Actions quality gate and trigger Vercel production deployments from `main` through a Vercel Deploy Hook after CI passes.
 
-**Architecture:** The repository will contain one GitHub Actions workflow that runs lint, tests, and build on pull requests to `main` and pushes to `main`. Vercel's existing Git integration remains the deployment engine, so the workflow must not call `vercel deploy` or require Vercel secrets.
+**Architecture:** The repository contains one GitHub Actions workflow that runs lint, tests, and build on pull requests to `main` and pushes to `main`. On `main` pushes, a second job waits for CI to pass and calls the Vercel Deploy Hook stored in the `VERCEL_DEPLOY_HOOK_URL` GitHub secret. The workflow must not call `vercel deploy` or commit the deploy hook URL.
 
-**Tech Stack:** GitHub Actions, Node.js 22, npm, Vite, React, TypeScript, Vitest, ESLint, Vercel Git deployments.
+**Tech Stack:** GitHub Actions, Node.js 22, npm, Vite, React, TypeScript, Vitest, ESLint, Vercel Deploy Hooks.
 
 ---
 
 ## File Structure
 
-- Create: `.github/workflows/ci.yml`
-  - Responsibility: define the GitHub Actions `CI` workflow that installs dependencies and runs the repository quality checks.
+- Create/modify: `.github/workflows/ci.yml`
+  - Responsibility: define the GitHub Actions `CI` workflow that installs dependencies, runs the repository quality checks, and triggers the Vercel deploy hook after `main` passes.
 - Modify: `README.md`
-  - Responsibility: document how CI, Vercel previews, production deploys, and branch protection are expected to work for future maintainers and agents.
+  - Responsibility: document how CI, the Vercel deploy hook, production deploys, and branch protection are expected to work for future maintainers and agents.
 - Existing reference: `package.json`
   - Responsibility: provides the existing `lint`, `test`, and `build` scripts used by the workflow.
 - Existing reference: `vercel.json`
@@ -95,6 +95,24 @@ jobs:
 
       - name: Run build
         run: npm run build
+
+  deploy-production:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Trigger Vercel deploy hook
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "VERCEL_DEPLOY_HOOK_URL secret is required."
+            exit 1
+          fi
+
+          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
 ```
 
 - [ ] **Step 4: Check the workflow diff for whitespace errors**
@@ -121,7 +139,7 @@ Expected output shows:
 name: CI
 ```
 
-Expected output also shows no `vercel deploy`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, or `VERCEL_PROJECT_ID`.
+Expected output also shows no `vercel deploy`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, or literal deploy hook URL.
 
 - [ ] **Step 6: Commit the workflow**
 
@@ -147,22 +165,22 @@ Insert this section after the local setup section and before `## Google Sheets s
 ```markdown
 ## CI/CD
 
-This repo uses a hybrid Vercel and GitHub Actions deployment flow.
+GitHub Actions runs CI checks, then triggers Vercel production deployments through a Vercel Deploy Hook after `main` passes.
 
-- Vercel remains the deployment engine through its Git integration.
-- Pull requests and feature branches create Vercel Preview deployments.
-- Merges to `main` automatically create Vercel Production deployments.
-- GitHub Actions runs the `CI` workflow on pull requests targeting `main` and pushes to `main`.
-- The `CI` workflow installs dependencies with `npm ci`, then runs `npm run lint`, `npm run test`, and `npm run build`.
+- Pull requests targeting `main` run the `CI` workflow.
+- Pushes to `main` run the same `CI` workflow and then the `Deploy Production` job.
+- The `CI` job installs dependencies with `npm ci`, then runs `npm run lint`, `npm run test`, and `npm run build`.
+- The `Deploy Production` job calls the Vercel Deploy Hook from the `VERCEL_DEPLOY_HOOK_URL` GitHub secret.
+- Do not commit the deploy hook URL to the repository.
 
 Recommended GitHub branch protection for `main`:
 
 1. Require a pull request before merging.
 2. Require status checks to pass before merging.
 3. Require the GitHub Actions `CI` check.
-4. Keep Vercel deployment checks visible on pull requests.
+4. Store the Vercel Deploy Hook URL as the `VERCEL_DEPLOY_HOOK_URL` repository secret.
 
-Do not add Vercel deployment commands or Vercel tokens to GitHub Actions for this setup. Vercel should continue to own preview and production deployments.
+The deploy hook should target the Vercel `workspace` project and the `main` branch. Pull request preview deployments depend on the Vercel Git integration remaining enabled for preview branches.
 ```
 
 - [ ] **Step 2: Verify the README section is in the intended location**

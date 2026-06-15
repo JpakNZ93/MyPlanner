@@ -35,22 +35,22 @@ You can also test the complete API and Stripe webhook flow from a Vercel deploym
 
 ## CI/CD
 
-Vercel handles deployments through its Git integration, while GitHub Actions runs CI checks.
+GitHub Actions runs CI checks, then triggers Vercel production deployments through a Vercel Deploy Hook after `main` passes.
 
-- Vercel remains the deployment engine through its Git integration.
-- Pull requests and feature branches create Vercel Preview deployments.
-- Merges to `main` automatically create Vercel Production deployments.
-- GitHub Actions runs the `CI` workflow on pull requests targeting `main` and pushes to `main`.
-- The `CI` workflow installs dependencies with `npm ci`, then runs `npm run lint`, `npm run test`, and `npm run build`.
+- Pull requests targeting `main` run the `CI` workflow.
+- Pushes to `main` run the same `CI` workflow and then the `Deploy Production` job.
+- The `CI` job installs dependencies with `npm ci`, then runs `npm run lint`, `npm run test`, and `npm run build`.
+- The `Deploy Production` job calls the Vercel Deploy Hook from the `VERCEL_DEPLOY_HOOK_URL` GitHub secret.
+- Do not commit the deploy hook URL to the repository.
 
 Recommended GitHub branch protection for `main`:
 
 1. Require a pull request before merging.
 2. Require status checks to pass before merging.
 3. Require the GitHub Actions `CI` check.
-4. Keep Vercel deployment checks visible on pull requests.
+4. Store the Vercel Deploy Hook URL as the `VERCEL_DEPLOY_HOOK_URL` repository secret.
 
-Do not add Vercel deployment commands or Vercel tokens to GitHub Actions for this setup. Vercel should continue to own preview and production deployments.
+The deploy hook should target the Vercel `workspace` project and the `main` branch. Pull request preview deployments depend on the Vercel Git integration remaining enabled for preview branches.
 
 ## Google Sheets setup
 
