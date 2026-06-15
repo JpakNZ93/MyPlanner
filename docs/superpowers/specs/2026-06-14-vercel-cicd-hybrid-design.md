@@ -95,6 +95,8 @@ Expected Vercel behavior:
 - Merges to `main` deploy Production when GitHub Actions calls the `main` deploy hook after CI passes.
 - Existing Vercel environment variables remain managed in Vercel project settings.
 
+Production deploys from `main` should be controlled by the GitHub Actions deploy-hook path. Do not leave a separate Vercel native production auto-deploy path enabled for `main`, because it can deploy a merge commit before the GitHub Actions `quality` job has passed.
+
 The existing `vercel.json` rewrites for `/success` and `/cancel` remain unchanged.
 
 ## Error Handling

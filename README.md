@@ -52,6 +52,8 @@ Recommended GitHub branch protection for `main`:
 
 The deploy hook should target the Vercel `workspace` project and the `main` branch. Pull request preview deployments depend on the Vercel Git integration remaining enabled for preview branches.
 
+Production deploys should be controlled by the GitHub Actions deploy-hook path. Do not enable a separate Vercel native production auto-deploy for `main`, because that can deploy before the `CI` job has passed.
+
 ## Google Sheets setup
 
 1. Create a Google Sheet for registrations.

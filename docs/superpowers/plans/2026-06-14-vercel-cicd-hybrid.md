@@ -318,20 +318,20 @@ If build artifacts appear, inspect `.gitignore` before deciding whether they are
 Run:
 
 ```bash
-git push -u origin cursor/vercel-cicd-docs-e61d
+git push -u origin cursor/main-deploy-hook-e61d
 ```
 
 Expected: push exits with status 0.
 
 - [ ] **Step 2: Update the pull request description**
 
-Use the PR management tool to update the existing PR for branch `cursor/vercel-cicd-docs-e61d` with this body:
+Use the PR management tool to update the existing PR for branch `cursor/main-deploy-hook-e61d` with this body:
 
 ```markdown
 ## Summary
 - Add a GitHub Actions `CI` workflow for pull requests to `main` and pushes to `main`.
-- Keep Vercel as the deployment engine for feature previews and automatic production deploys from `main`.
-- Document the hybrid CI/CD contract and recommended branch protection in the README.
+- Add a `Deploy Production` job that calls the Vercel Deploy Hook after `main` CI passes.
+- Document the deploy-hook contract, required GitHub secret, and recommended branch protection in the README.
 
 ## Verification
 - `npm ci`
