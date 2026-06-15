@@ -265,6 +265,50 @@ describe("stripe webhook API", () => {
     consoleError.mockRestore();
   });
 
+  it("returns 200 when email environment validation fails after appending the paid registration", async () => {
+    constructEvent.mockReturnValue(
+      checkoutCompletedEvent({
+        id: "cs_test_123",
+        payment_status: "paid",
+        metadata: { registrationId: "reg_123" },
+      }),
+    );
+    hasPaidSession.mockResolvedValue(false);
+    findPendingRegistration.mockResolvedValue({
+      registrationId: "reg_123",
+      createdAt: "2026-06-12T00:00:00.000Z",
+      payload: {
+        seatCount: 1,
+        primaryAttendee: {
+          firstName: "Jane",
+          lastName: "Citizen",
+          mobile: "0412345678",
+          email: "jane@example.com",
+          church: "Central Church",
+        },
+        additionalAttendees: [],
+      },
+    });
+    getEmailEnv.mockImplementation(() => {
+      throw new Error("Email notifications require RESEND_API_KEY, NOTIFICATION_EMAIL, and EMAIL_FROM");
+    });
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { default: handler } = await import("../../stripe-webhook.js");
+    const response = createResponse();
+
+    await handler(createRequest(), response);
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({ received: true });
+    expect(appendPaidRegistration).toHaveBeenCalledOnce();
+    expect(sendRegistrationEmail).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith(
+      "Failed to send registration email",
+      expect.any(Error),
+    );
+    consoleError.mockRestore();
+  });
+
   it("returns a retryable 500 and does not email when paid registration append fails", async () => {
     constructEvent.mockReturnValue(
       checkoutCompletedEvent({
