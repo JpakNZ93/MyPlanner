@@ -3,7 +3,7 @@ import {
   paidRegistrationToRow,
   pendingRegistrationToRow,
   rowToPendingRegistration,
-} from "../registration-records";
+} from "../registration-records.js";
 
 describe("registration record mapping", () => {
   it("round-trips pending registration rows", () => {

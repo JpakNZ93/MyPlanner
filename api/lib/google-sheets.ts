@@ -1,13 +1,13 @@
 import { google } from "googleapis";
 
-import type { ServerEnv } from "./env";
-import type { PaidRegistrationRecord } from "../../src/lib/registration";
+import type { GoogleSheetsEnv } from "./env.js";
+import type { PaidRegistrationRecord } from "../../src/lib/registration.js";
 import {
   paidRegistrationToRow,
   pendingRegistrationToRow,
   rowToPendingRegistration,
   type PendingRegistrationRecord,
-} from "./registration-records";
+} from "./registration-records.js";
 
 const pendingRange = "PendingRegistrations!A:C";
 const paidRange = "PaidRegistrations!A:O";
@@ -20,7 +20,7 @@ export interface RegistrationSheetClient {
   appendPaidRegistration(record: PaidRegistrationRecord): Promise<void>;
 }
 
-export function createRegistrationSheetClient(env: ServerEnv): RegistrationSheetClient {
+export function createRegistrationSheetClient(env: GoogleSheetsEnv): RegistrationSheetClient {
   const auth = new google.auth.JWT({
     email: env.googleClientEmail,
     key: env.googlePrivateKey,

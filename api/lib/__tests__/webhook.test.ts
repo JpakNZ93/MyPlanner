@@ -6,12 +6,16 @@ const {
   appendPaidRegistration,
   constructEvent,
   findPendingRegistration,
+  getEmailEnv,
+  getGoogleSheetsEnv,
   hasPaidSession,
   sendRegistrationEmail,
 } = vi.hoisted(() => ({
   appendPaidRegistration: vi.fn(),
   constructEvent: vi.fn(),
   findPendingRegistration: vi.fn(),
+  getEmailEnv: vi.fn(),
+  getGoogleSheetsEnv: vi.fn(),
   hasPaidSession: vi.fn(),
   sendRegistrationEmail: vi.fn(),
 }));
@@ -29,11 +33,13 @@ const serverEnv = {
   eventTitle: "Youth Conference",
 };
 
-vi.mock("../env", () => ({
-  getServerEnv: () => serverEnv,
+vi.mock("../env.js", () => ({
+  getEmailEnv,
+  getGoogleSheetsEnv,
+  getWebhookEnv: () => serverEnv,
 }));
 
-vi.mock("../google-sheets", () => ({
+vi.mock("../google-sheets.js", () => ({
   createRegistrationSheetClient: () => ({
     appendPaidRegistration,
     findPendingRegistration,
@@ -41,7 +47,7 @@ vi.mock("../google-sheets", () => ({
   }),
 }));
 
-vi.mock("../email", () => ({
+vi.mock("../email.js", () => ({
   sendRegistrationEmail,
 }));
 
@@ -95,8 +101,12 @@ describe("stripe webhook API", () => {
     appendPaidRegistration.mockReset();
     constructEvent.mockReset();
     findPendingRegistration.mockReset();
+    getEmailEnv.mockReset();
+    getGoogleSheetsEnv.mockReset();
     hasPaidSession.mockReset();
     sendRegistrationEmail.mockReset();
+    getEmailEnv.mockReturnValue(serverEnv);
+    getGoogleSheetsEnv.mockReturnValue(serverEnv);
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-12T00:10:00.000Z"));
   });
@@ -131,7 +141,7 @@ describe("stripe webhook API", () => {
         ],
       },
     });
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const response = createResponse();
 
     await handler(createRequest(), response);
@@ -166,6 +176,31 @@ describe("stripe webhook API", () => {
     expect(sendRegistrationEmail).toHaveBeenCalledWith(serverEnv, paidRecord);
   });
 
+  it("acknowledges paid checkout sessions when registration storage is not configured", async () => {
+    getGoogleSheetsEnv.mockReturnValue(null);
+    constructEvent.mockReturnValue(
+      checkoutCompletedEvent({
+        id: "cs_test_123",
+        payment_status: "paid",
+        metadata: { registrationId: "reg_123" },
+      }),
+    );
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { default: handler } = await import("../../stripe-webhook.js");
+    const response = createResponse();
+
+    await handler(createRequest(), response);
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({ received: true, storage: "not_configured" });
+    expect(hasPaidSession).not.toHaveBeenCalled();
+    expect(findPendingRegistration).not.toHaveBeenCalled();
+    expect(appendPaidRegistration).not.toHaveBeenCalled();
+    expect(sendRegistrationEmail).not.toHaveBeenCalled();
+    expect(consoleWarn).toHaveBeenCalledWith("Registration storage is not configured");
+    consoleWarn.mockRestore();
+  });
+
   it("ignores duplicate paid sessions", async () => {
     constructEvent.mockReturnValue(
       checkoutCompletedEvent({
@@ -175,7 +210,7 @@ describe("stripe webhook API", () => {
       }),
     );
     hasPaidSession.mockResolvedValue(true);
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const response = createResponse();
 
     await handler(createRequest(), response);
@@ -214,7 +249,7 @@ describe("stripe webhook API", () => {
     });
     sendRegistrationEmail.mockRejectedValue(new Error("Resend failed"));
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const response = createResponse();
 
     await handler(createRequest(), response);
@@ -255,7 +290,7 @@ describe("stripe webhook API", () => {
       },
     });
     appendPaidRegistration.mockRejectedValue(new Error("Google Sheets append failed"));
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const response = createResponse();
 
     await handler(createRequest(), response);
@@ -268,7 +303,7 @@ describe("stripe webhook API", () => {
 
   it("passes the streamed raw body to Stripe signature verification", async () => {
     constructEvent.mockReturnValue({ type: "customer.created", data: { object: {} } });
-    const { default: handler } = await import("../../stripe-webhook");
+    const { default: handler } = await import("../../stripe-webhook.js");
     const request = Object.assign(Readable.from(["streamed-stripe-body"]), {
       method: "POST",
       headers: { "stripe-signature": "sig_123" },

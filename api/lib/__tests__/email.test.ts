@@ -55,7 +55,7 @@ describe("registration email", () => {
       data: { id: "email_123" },
       error: null,
     });
-    const { sendRegistrationEmail } = await import("../email");
+    const { sendRegistrationEmail } = await import("../email.js");
 
     await sendRegistrationEmail(env, paidRecord);
 
@@ -71,7 +71,7 @@ describe("registration email", () => {
       data: null,
       error: { message: "Invalid recipient address" },
     });
-    const { sendRegistrationEmail } = await import("../email");
+    const { sendRegistrationEmail } = await import("../email.js");
 
     await expect(sendRegistrationEmail(env, paidRecord)).rejects.toThrow(
       "Invalid recipient address",

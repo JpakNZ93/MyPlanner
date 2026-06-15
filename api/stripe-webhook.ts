@@ -6,11 +6,11 @@ import {
   CURRENCY,
   PRICE_PER_SEAT_CENTS,
   type PaidRegistrationRecord,
-} from "../src/lib/registration";
-import { getServerEnv } from "./lib/env";
-import { sendRegistrationEmail } from "./lib/email";
-import { createRegistrationSheetClient } from "./lib/google-sheets";
-import { sendJson, sendMethodNotAllowed } from "./lib/http";
+} from "../src/lib/registration.js";
+import { getEmailEnv, getGoogleSheetsEnv, getWebhookEnv } from "./lib/env.js";
+import { sendRegistrationEmail } from "./lib/email.js";
+import { createRegistrationSheetClient } from "./lib/google-sheets.js";
+import { sendJson, sendMethodNotAllowed } from "./lib/http.js";
 
 export const config = {
   api: {
@@ -24,7 +24,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return;
   }
 
-  const env = getServerEnv();
+  const env = getWebhookEnv();
   const stripe = new Stripe(env.stripeSecretKey);
   const signature = request.headers["stripe-signature"];
 
@@ -62,7 +62,14 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return;
   }
 
-  const sheetClient = createRegistrationSheetClient(env);
+  const googleSheetsEnv = getGoogleSheetsEnv();
+  if (!googleSheetsEnv) {
+    console.warn("Registration storage is not configured");
+    sendJson(response, 200, { received: true, storage: "not_configured" });
+    return;
+  }
+
+  const sheetClient = createRegistrationSheetClient(googleSheetsEnv);
   if (await sheetClient.hasPaidSession(session.id)) {
     sendJson(response, 200, { received: true, duplicate: true });
     return;
@@ -95,10 +102,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return;
   }
 
-  try {
-    await sendRegistrationEmail(env, paidRecord);
-  } catch (error) {
-    console.error("Failed to send registration email", error);
+  const emailEnv = getEmailEnv();
+  if (emailEnv) {
+    try {
+      await sendRegistrationEmail(emailEnv, paidRecord);
+    } catch (error) {
+      console.error("Failed to send registration email", error);
+    }
   }
 
   sendJson(response, 200, { received: true });
