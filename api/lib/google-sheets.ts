@@ -1,8 +1,9 @@
 import { google } from "googleapis";
 
 import type { GoogleSheetsEnv } from "./env.js";
-import type { PaidRegistrationRecord } from "../../src/lib/registration.js";
+import type { AdditionalAttendee, PaidRegistrationRecord } from "../../src/lib/registration.js";
 import {
+  additionalAttendeeToRow,
   paidRegistrationToRow,
   pendingRegistrationToRow,
   rowToPendingRegistration,
@@ -10,11 +11,17 @@ import {
 } from "./registration-records.js";
 
 const pendingRange = "PendingRegistrations!A:I";
-const paidRange = "PaidRegistrations!A:O";
+const paidRange = "PaidRegistrations!A:N";
+const additionalAttendeesRange = "AdditionalAttendees!A:I";
 const sheetsScope = "https://www.googleapis.com/auth/spreadsheets";
 
 export interface RegistrationSheetClient {
   appendPendingRegistration(record: PendingRegistrationRecord): Promise<void>;
+  appendAdditionalAttendees(
+    registrationId: string,
+    createdAt: string,
+    attendees: AdditionalAttendee[],
+  ): Promise<void>;
   findPendingRegistration(registrationId: string): Promise<PendingRegistrationRecord | null>;
   hasPaidSession(stripeSessionId: string): Promise<boolean>;
   appendPaidRegistration(record: PaidRegistrationRecord): Promise<void>;
@@ -34,8 +41,30 @@ export function createRegistrationSheetClient(env: GoogleSheetsEnv): Registratio
         spreadsheetId: env.googleSheetId,
         range: pendingRange,
         valueInputOption: "RAW",
+        insertDataOption: "INSERT_ROWS",
         requestBody: {
           values: [pendingRegistrationToRow(record)],
+        },
+      });
+    },
+
+    async appendAdditionalAttendees(registrationId, createdAt, attendees) {
+      if (attendees.length === 0) return;
+
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: env.googleSheetId,
+        range: additionalAttendeesRange,
+        valueInputOption: "RAW",
+        insertDataOption: "INSERT_ROWS",
+        requestBody: {
+          values: attendees.map((attendee, index) =>
+            additionalAttendeeToRow({
+              registrationId,
+              attendeeIndex: index + 1,
+              attendee,
+              createdAt,
+            }),
+          ),
         },
       });
     },
@@ -66,6 +95,7 @@ export function createRegistrationSheetClient(env: GoogleSheetsEnv): Registratio
         spreadsheetId: env.googleSheetId,
         range: paidRange,
         valueInputOption: "RAW",
+        insertDataOption: "INSERT_ROWS",
         requestBody: {
           values: [paidRegistrationToRow(record)],
         },
