@@ -102,13 +102,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
     return;
   }
 
-  const emailEnv = getEmailEnv();
-  if (emailEnv) {
-    try {
+  try {
+    const emailEnv = getEmailEnv();
+    if (emailEnv) {
       await sendRegistrationEmail(emailEnv, paidRecord);
-    } catch (error) {
-      console.error("Failed to send registration email", error);
     }
+  } catch (error) {
+    console.error("Failed to send registration email", error);
   }
 
   sendJson(response, 200, { received: true });
