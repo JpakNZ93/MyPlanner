@@ -60,7 +60,7 @@ Production deploys should be controlled by the GitHub Actions deploy-hook path. 
 2. Add a `PendingRegistrations` tab with these headers:
 
    ```text
-   registrationId, createdAt, payload
+   registrationId, createdAt, seatCount, primaryFirstName, primaryLastName, primaryMobile, primaryEmail, primaryChurch, additionalAttendees
    ```
 
 3. Add a `PaidRegistrations` tab with these headers:

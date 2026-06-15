@@ -6,7 +6,7 @@ import {
 } from "../registration-records.js";
 
 describe("registration record mapping", () => {
-  it("round-trips pending registration rows", () => {
+  it("maps pending registration rows into readable sheet columns", () => {
     const row = pendingRegistrationToRow({
       registrationId: "reg_123",
       createdAt: "2026-06-12T00:00:00.000Z",
@@ -25,6 +25,17 @@ describe("registration record mapping", () => {
       },
     });
 
+    expect(row).toEqual([
+      "reg_123",
+      "2026-06-12T00:00:00.000Z",
+      "2",
+      "Jane",
+      "Citizen",
+      "0412345678",
+      "jane@example.com",
+      "Central Church",
+      JSON.stringify([{ firstName: "John", lastName: "Citizen", church: "Central Church" }]),
+    ]);
     expect(rowToPendingRegistration(row)).toEqual({
       registrationId: "reg_123",
       createdAt: "2026-06-12T00:00:00.000Z",
@@ -40,6 +51,40 @@ describe("registration record mapping", () => {
         additionalAttendees: [
           { firstName: "John", lastName: "Citizen", church: "Central Church" },
         ],
+      },
+    });
+  });
+
+  it("reads legacy pending rows with a payload JSON column", () => {
+    const row = [
+      "reg_123",
+      "2026-06-12T00:00:00.000Z",
+      JSON.stringify({
+        seatCount: 1,
+        primaryAttendee: {
+          firstName: "Jane",
+          lastName: "Citizen",
+          mobile: "0412345678",
+          email: "jane@example.com",
+          church: "Central Church",
+        },
+        additionalAttendees: [],
+      }),
+    ];
+
+    expect(rowToPendingRegistration(row)).toEqual({
+      registrationId: "reg_123",
+      createdAt: "2026-06-12T00:00:00.000Z",
+      payload: {
+        seatCount: 1,
+        primaryAttendee: {
+          firstName: "Jane",
+          lastName: "Citizen",
+          mobile: "0412345678",
+          email: "jane@example.com",
+          church: "Central Church",
+        },
+        additionalAttendees: [],
       },
     });
   });
