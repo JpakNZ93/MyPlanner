@@ -9,7 +9,7 @@ import {
   type PendingRegistrationRecord,
 } from "./registration-records.js";
 
-const pendingRange = "PendingRegistrations!A:C";
+const pendingRange = "PendingRegistrations!A:I";
 const paidRange = "PaidRegistrations!A:O";
 const sheetsScope = "https://www.googleapis.com/auth/spreadsheets";
 
