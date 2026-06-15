@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  additionalAttendeeToRow,
   paidRegistrationToRow,
   pendingRegistrationToRow,
   rowToPendingRegistration,
@@ -89,7 +90,7 @@ describe("registration record mapping", () => {
     });
   });
 
-  it("maps a paid registration into readable sheet columns", () => {
+  it("maps a paid registration into readable sheet columns without child attendee JSON", () => {
     const row = paidRegistrationToRow({
       registrationId: "reg_123",
       stripeSessionId: "cs_test_123",
@@ -107,12 +108,54 @@ describe("registration record mapping", () => {
         email: "jane@example.com",
         church: "Central Church",
       },
-      additionalAttendees: [],
+      additionalAttendees: [
+        { firstName: "John", lastName: "Citizen", church: "Central Church" },
+      ],
     });
 
-    expect(row).toContain("reg_123");
-    expect(row).toContain("cs_test_123");
-    expect(row).toContain("Jane");
-    expect(row).toContain("[]");
+    expect(row).toEqual([
+      "reg_123",
+      "cs_test_123",
+      "paid",
+      "1",
+      "5000",
+      "5000",
+      "aud",
+      "Jane",
+      "Citizen",
+      "0412345678",
+      "jane@example.com",
+      "Central Church",
+      "2026-06-12T00:00:00.000Z",
+      "2026-06-12T00:05:00.000Z",
+    ]);
+  });
+
+  it("maps an additional attendee into a related child sheet row", () => {
+    const row = additionalAttendeeToRow({
+      registrationId: "reg_123",
+      attendeeIndex: 1,
+      createdAt: "2026-06-12T00:00:00.000Z",
+      attendee: {
+        firstName: "John",
+        lastName: "Citizen",
+        church: "North Church",
+        mobile: "0499999999",
+        email: "john@example.com",
+        usesPrimaryContact: false,
+      },
+    });
+
+    expect(row).toEqual([
+      "reg_123",
+      "1",
+      "John",
+      "Citizen",
+      "North Church",
+      "0499999999",
+      "john@example.com",
+      "false",
+      "2026-06-12T00:00:00.000Z",
+    ]);
   });
 });
