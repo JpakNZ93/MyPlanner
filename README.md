@@ -66,12 +66,18 @@ Production deploys should be controlled by the GitHub Actions deploy-hook path. 
 3. Add a `PaidRegistrations` tab with these headers:
 
    ```text
-   registrationId, stripeSessionId, paymentStatus, seatCount, pricePerSeatCents, totalAmountCents, currency, primaryFirstName, primaryLastName, primaryMobile, primaryEmail, primaryChurch, additionalAttendees, createdAt, paidAt
+   registrationId, stripeSessionId, paymentStatus, seatCount, pricePerSeatCents, totalAmountCents, currency, primaryFirstName, primaryLastName, primaryMobile, primaryEmail, primaryChurch, createdAt, paidAt
    ```
 
-4. Create a Google Cloud service account with Google Sheets API access.
-5. Share the registration sheet with the service account email.
-6. Set `GOOGLE_SHEET_ID`, `GOOGLE_CLIENT_EMAIL`, and `GOOGLE_PRIVATE_KEY` in Vercel.
+4. Add an `AdditionalAttendees` tab with these headers:
+
+   ```text
+   registrationId, attendeeIndex, firstName, lastName, church, mobile, email, usesPrimaryContact, createdAt
+   ```
+
+5. Create a Google Cloud service account with Google Sheets API access.
+6. Share the registration sheet with the service account email.
+7. Set `GOOGLE_SHEET_ID`, `GOOGLE_CLIENT_EMAIL`, and `GOOGLE_PRIVATE_KEY` in Vercel.
 
 ## Stripe sandbox setup
 
@@ -118,8 +124,8 @@ Google Sheets idempotency prevents sequential duplicate Stripe webhook rows by S
 ## Sandbox verification
 
 1. Deploy to Vercel.
-2. Submit the form with one primary attendee and one seat.
+2. Submit the form with one primary attendee and at least one additional attendee.
 3. Pay with the Stripe test card `4242 4242 4242 4242`.
 4. Confirm the app redirects to the success page.
-5. Confirm a paid row appears in the `PaidRegistrations` tab.
+5. Confirm a paid row appears in the `PaidRegistrations` tab and related guest rows appear in the `AdditionalAttendees` tab with the same `registrationId`.
 6. Confirm the notification email is delivered.
