@@ -18,8 +18,9 @@ Google Sheets will contain three tabs:
 
 1. `PendingRegistrations`
    - One row per checkout attempt.
-   - Headers: `registrationId`, `createdAt`, `payload`.
-   - The payload remains the normalized registration JSON used by the webhook to build the paid registration record.
+   - Headers: `registrationId`, `createdAt`, `seatCount`, `primaryFirstName`, `primaryLastName`, `primaryMobile`, `primaryEmail`, `primaryChurch`, `additionalAttendees`.
+   - The readable primary-attendee columns remain the source for the webhook to build the paid registration record.
+   - The `additionalAttendees` JSON column remains for webhook/email compatibility; `AdditionalAttendees` is the reporting-friendly child table.
 
 2. `PaidRegistrations`
    - One row per successful paid registration.
