@@ -12,7 +12,7 @@ Vercel-ready event registration template with a static React frontend, Stripe sa
 - Same contact checkbox for additional attendees.
 - AUD $50 seat count and total calculation.
 - Stripe hosted Checkout.
-- Google Sheets `PendingRegistrations` and `PaidRegistrations` tabs.
+- Google Sheets `PendingRegistrations`, `PaidRegistrations`, and `AdditionalAttendees` tabs.
 - Resend email notification after a paid registration is saved.
 
 ## Local setup
